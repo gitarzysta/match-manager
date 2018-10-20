@@ -62,3 +62,5 @@ To visualize a replay file:
 ```
 
 The visualizer must be set up separately. The command used to visualize replays is specified at the top of manager.py.
+
+This code has not yet been updated to use a Halite 3 visualizer.
