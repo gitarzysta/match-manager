@@ -17,14 +17,13 @@ import sys
 import math
 import argparse
 
-import skills
-from skills import trueskill
 from subprocess import call
 
-import match
+import match as match
 import database
 import player as pl
 import util
+import time
 
 
 halite_command = "./halite"
@@ -32,9 +31,9 @@ visualizer_command = ["electron", "../visualizer", "-o"]
 # db_filename is now specified at command line, with the default set to "db.sqlite3"
 browser_binary = "firefox"
 
-def max_match_rounds(width, height):
-    return 400 # FIXME check the actual final forumla
 
+def max_match_rounds(width, height):
+    return 300 # FIXME check the actual final forumla
 
 
 class Manager:
@@ -52,7 +51,7 @@ class Manager:
         self.db = database.Database(db_filename)
 
     def run_round(self, contestants, width, height, seed):
-        m = match.Match(contestants, width, height, seed, max_match_rounds(width, height), self.keep_replays, self.keep_logs)
+        m = match.Match(contestants, width, height, seed, 2 * len(contestants) * max_match_rounds(width, height), self.keep_replays, self.keep_logs)
         print(m)
         try:
             m.run_match(self.halite_binary)
@@ -85,7 +84,6 @@ class Manager:
         random.shuffle(contestants)
         return contestants
 
-
     def run_rounds(self, player_dist, map_dist):
         try:
             self.run_rounds_unix(player_dist, map_dist)
@@ -105,17 +103,20 @@ class Manager:
 
     def setup_round (self, player_dist, map_dist):
         if self.players_max > 3:
-            num_contestants = random.choice([2, 4])
+            num_contestants = random.choice(player_dist)
+            #num_contestants = random.choice([2, 4])
         else:
             num_contestants = self.players_min
-        print("num_contestants = " + str(num_contestants))
+        print("\nnum_contestants = " + str(num_contestants))
         contestants = self.pick_contestants(num_contestants)
-        print(contestants)
-        size_w = random.choice(map_dist) * 8
-        size_h = size_w
-        seed = random.randint(10000, 2073741824)
+        print('\n'.join(str(c) for c in contestants))
+        size = random.choice(map_dist) #  * 3
+        #size_h = int((size_w / 3) * 2)
+        #seed = random.randint(10000, 2073741824)
+        stime = int(time.time())
+        seed = random.randint(stime + 7200, stime+86400)
         print ("\n------------------- running new match... -------------------\n")
-        self.run_round(contestants, size_w, size_h, seed)
+        self.run_round(contestants, size, size, seed)
         self.round_count += 1
 
     def add_player(self, name, path):
@@ -155,9 +156,6 @@ class Manager:
     def view_replay_id(self, id):
         filename = self.db.get_replay_filename(id)
         view_replay(filename)
-        
-
-
 
 
 def view_replay(filename):
@@ -274,7 +272,8 @@ class Commandline:
                                 help = 'Use the distribution of player counts experienced by non-seed players')
 
         self.parser.add_argument('--mapdist', '--map-dist', '--map_dist', dest = 'map_dist', type = int,
-                                nargs ='*', action = 'store', default = range(4, 9),
+#                                nargs ='*', action = 'store', default = range(80, 128),
+                                nargs ='*', action = 'store', default = range(32,72,8),
                                 help = 'Specify a custom distribution of (square) map sizes.')
 
     def parse(self, args):
@@ -397,6 +396,7 @@ class Commandline:
         
         elif self.no_args:
             self.parser.print_help()
+
 
 cmd = Commandline()
 cmd.parse(sys.argv[1:])
