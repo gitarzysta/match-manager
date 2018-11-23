@@ -11,11 +11,9 @@ record_dir = "replays"
 
 def update_skills(players, gameranks):
     """ Update player skills based on ranks from a match """
-    # tau=0.000 for finals
-    print(players)
-    print(gameranks)
     # sort players according to ranks
     players = [p for _,p in sorted(zip(gameranks, players))]
+    # tau=0.000 for finals
     trueskill.setup(tau=0.008, draw_probability=0.001, backend='mpmath')
     teams = [[trueskill.Rating(mu=player.mu, sigma=player.sigma)] for player in players]
     new_ratings = trueskill.rate(teams)

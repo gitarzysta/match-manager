@@ -19,7 +19,7 @@ import argparse
 
 from subprocess import call
 
-import match as match
+import match
 import database
 import player as pl
 import util
